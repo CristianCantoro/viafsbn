@@ -1,0 +1,144 @@
+#! /usr/bin/env python
+# *-* coding: utf-8 *-*
+"""
+Una semplice utility di ricerca per codici VIAF e SBN.
+Esempi:
+ viafsbn --viaf=233215271
+ viafsbn --debug --sbn="IT\ICCU\CFIV\002221"
+
+(nota: dato che i codici SBN contengono dei backslash (\) è necessario
+scrivere il codice tra virgolette ("<sbn>").
+
+Usage:
+  viafsbn [--debug] [--opere] [--json] --viaf=<viaf>
+  viafsbn [--debug] [--opere] [--json] --sbn=<sbn>
+  viafsbn -h | --help
+  viafsbn --version
+
+Options:
+  -h --help      Show this screen.
+  --version      Show version.
+  --viaf=<viaf>  VIAF code.
+  --sbn=<sbn>    SBN code.
+"""
+
+import logging
+import json
+from docopt import docopt
+from viafsbn import search_viaf, search_sbn
+
+# logging
+LOGFORMAT_STDOUT = {logging.DEBUG: '%(module)s:%(funcName)s:%(lineno)s - '
+                                   '%(levelname)-8s: %(message)s',
+                    logging.INFO: '%(levelname)-8s: %(message)s',
+                    logging.WARNING: '%(levelname)-8s: %(message)s',
+                    logging.ERROR: '%(levelname)-8s: %(message)s',
+                    logging.CRITICAL: '%(levelname)-8s: %(message)s'
+                    }
+
+# --- root logger
+rootlogger = logging.getLogger()
+rootlogger.setLevel(logging.INFO)
+
+lvl_config_logger = logging.WARNING
+
+console = logging.StreamHandler()
+console.setLevel(lvl_config_logger)
+
+formatter = logging.Formatter(LOGFORMAT_STDOUT[lvl_config_logger])
+console.setFormatter(formatter)
+
+rootlogger.addHandler(console)
+
+logger = logging.getLogger('viafsbn')
+logger.setLevel(logging.INFO)
+
+OUTPUT_TEMPLATE = u"""
+Informazioni sul record di autorità {tipo} n. {code}
+(ritrovato dall'url: <{url}>)
+"""
+
+CONTACT_MESSAGE = u"""
+Contattate lo sviluppatore se ritenete che qualcosa non stia funzionando
+come dovrebbe: kikkocristian <at> gmail <dot> com"""
+
+if __name__ == '__main__':
+
+    arguments = docopt(__doc__, version='0.1')
+
+    if arguments['--debug']:
+        rootlogger.setLevel(logging.DEBUG)
+        logger.setLevel(logging.DEBUG)
+
+    logger.debug(arguments['--sbn'])
+
+    viaf_code = arguments['--viaf']
+    sbn_code = arguments['--sbn']
+
+    logger.debug('VIAF: {}'.format(viaf_code))
+    logger.debug('SBN: {}'.format(sbn_code))
+
+    opere = False
+    if arguments['--opere']:
+        opere = True
+
+    item = None
+    if viaf_code:
+        try:
+            viaf_item = search_viaf(viaf_code)
+            tipo = 'VIAF'
+            item = viaf_item
+        except Exception as e:
+            print "Errore durante il recupero delle informazioni: " \
+                  "dal VIAF: {e}".format(e=repr(e))
+            print CONTACT_MESSAGE
+
+    if sbn_code:
+        try:
+            sbn_item = search_sbn(sbn_code, opere=opere)
+            tipo = 'SBN'
+            item = sbn_item
+        except Exception as e:
+            print "Errore durante il recupero delle informazioni: " \
+                  "dall'OPAC SBN: {e}".format(e=repr(e))
+            print CONTACT_MESSAGE
+
+    if item:
+        if arguments['--json']:
+            basedict = {'name': item.name,
+                        'type': tipo,
+                        'code': item.code,
+                        'url': item.url
+                        }
+
+            if tipo == 'SBN' and opere:
+                basedict['opere'] = [{'titolo': o.titolo,
+                                      'autori': o.autori
+                                      }
+                                     for o in item.opere
+                                     ]
+
+            if tipo == 'VIAF':
+                basedict['links'] = item.links
+
+            print json.dumps(basedict)
+
+        else:
+            print OUTPUT_TEMPLATE.format(tipo=tipo,
+                                         code=item.code,
+                                         url=item.url)
+            print 'Nome: ', item.name.encode('utf-8')
+
+            if tipo == 'SBN' and opere:
+                print "\n=== OPERE ==="
+                for o in item.opere:
+                    print o
+
+            if tipo == 'VIAF':
+                print '\n=== COLLEGAMENTI ==='
+                print item.links
+
+        exit(0)
+    else:
+        print "Errore! Non ho trovato alcun item"
+        exit(1)
