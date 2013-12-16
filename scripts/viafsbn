@@ -4,10 +4,11 @@
 Una semplice utility di ricerca per codici VIAF e SBN.
 Esempi:
  viafsbn --viaf=233215271
- viafsbn --debug --sbn="IT\ICCU\CFIV\002221"
+ viafsbn --debug --sbn="IT\\ICCU\\CFIV\\002221"
 
 (nota: dato che i codici SBN contengono dei backslash (\) è necessario
-scrivere il codice tra virgolette ("<sbn>").
+scrivere il codice tra virgolette ("<sbn>"), non è necessario mettere
+il doppio backslash (\\\\), può essere usato quello singolo).
 
 Usage:
   viafsbn [--debug] [--opere] [--json] --viaf=<viaf>
@@ -64,7 +65,7 @@ come dovrebbe: kikkocristian <at> gmail <dot> com"""
 
 if __name__ == '__main__':
 
-    arguments = docopt(__doc__, version='0.1')
+    arguments = docopt(__doc__, version='0.1.1')
 
     if arguments['--debug']:
         rootlogger.setLevel(logging.DEBUG)
