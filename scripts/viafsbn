@@ -24,9 +24,10 @@ Options:
 """
 
 import logging
-import json
 from docopt import docopt
+import viafsbn
 from viafsbn import search_viaf, search_sbn
+from viafsbn.format import json_format
 
 # logging
 LOGFORMAT_STDOUT = {logging.DEBUG: '%(module)s:%(funcName)s:%(lineno)s - '
@@ -106,24 +107,9 @@ if __name__ == '__main__':
 
     if item:
         if arguments['--json']:
-            basedict = {'name': item.name,
-                        'type': tipo,
-                        'code': item.code,
-                        'url': item.url
-                        }
-
-            if tipo == 'SBN' and opere:
-                basedict['opere'] = [{'titolo': o.titolo,
-                                      'autori': o.autori
-                                      }
-                                     for o in item.opere
-                                     ]
-
-            if tipo == 'VIAF':
-                basedict['links'] = vars(item.links)
-
-            print json.dumps(basedict)
-
+            print json_format(item=item,
+                              tipo=tipo,
+                              opere=opere)
         else:
             print OUTPUT_TEMPLATE.format(tipo=tipo,
                                          code=item.code,
