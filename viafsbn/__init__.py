@@ -28,9 +28,13 @@ def search_sbn(sbn_code, opere=False):
     sbnurl = SBNPERMURL.format(sbn_code=sbn_code.replace('\\', '/'))
     req_sbn = requests.get(sbnurl)
     if req_sbn.ok:
-        sbn_item = SbnItem(code=sbn_code,
-                           text=req_sbn.text,
-                           url=req_sbn.url,
-                           get_works=opere
-                           )
+        try:
+            sbn_item = SbnItem(code=sbn_code,
+                               text=req_sbn.text,
+                               url=req_sbn.url,
+                               get_works=opere
+                               )
+        except IndexError:
+            sbn_item = None
+
         return sbn_item

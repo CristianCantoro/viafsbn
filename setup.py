@@ -20,7 +20,7 @@ required = [
 
 setup(
     name='viafsbn',
-    version='0.1.1',
+    version='0.1.2',
     description='Simple library for extracting data from Wikipedia templates',
     author='Cristian Consonni',
     author_email='kikkocristian@gmail.com',

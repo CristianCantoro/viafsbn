@@ -65,7 +65,7 @@ come dovrebbe: kikkocristian <at> gmail <dot> com"""
 
 if __name__ == '__main__':
 
-    arguments = docopt(__doc__, version='0.1.1')
+    arguments = docopt(__doc__, version='0.1.2')
 
     if arguments['--debug']:
         rootlogger.setLevel(logging.DEBUG)
